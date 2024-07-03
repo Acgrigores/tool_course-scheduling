@@ -7,6 +7,7 @@ from plotly import express
 from plotly.graph_objects import Figure
 
 from proj.analytics.courseSchedule import CourseSchedule
+from proj.utils import clearContent
 
 
 class AssignmentsPerFaculty:
@@ -88,11 +89,11 @@ class AssignmentsPerFaculty:
         [Returns a DataFrame with the number of courses taught by each instructor]
         """  # noqa: E501
 
-        df: DataFrame = CourseSchedule(conn=self.conn).get()
+        df: DataFrame = CourseSchedule(conn=self.conn).compute()
 
         data: Series[int] = df["INSTRUCTOR"].value_counts(
             sort=True,
-            ascending=True,
+            ascending=False,
         )
 
         dataDF: DataFrame = data.reset_index()
@@ -142,7 +143,6 @@ class AssignmentsPerFaculty:
         )
 
         fig.update_layout(
-            yaxis={"categoryorder": "total ascending"},
             xaxis_title="Number of Courses",
             yaxis_title="Instructor Name",
         )
@@ -150,6 +150,8 @@ class AssignmentsPerFaculty:
         return fig
 
     def run(self) -> None:
+        clearContent()
+
         dfs: List[DataFrame] = [self.compute()]
         figs: List[Figure] = [self.plot(df=df) for df in dfs]
         """
@@ -176,7 +178,7 @@ class AssignmentsPerFaculty:
         >>> example_instance.run()
         [Runs the workflow to compute and plot assignments per instructor]
         """  # noqa: E501
-        
+
         streamlit.session_state["analyticTitle"] = (
             "Number of Assignments Per Faculty Member"
         )
@@ -185,4 +187,9 @@ class AssignmentsPerFaculty:
                 for the current term"
         )
         streamlit.session_state["dfList"] = dfs
+        streamlit.session_state["dfListTitles"] = ["Faculty Assignment Count"]
+
         streamlit.session_state["figList"] = figs
+        streamlit.session_state["figListTitles"] = [
+            "Faculty Assignment Count Plot"
+        ]
